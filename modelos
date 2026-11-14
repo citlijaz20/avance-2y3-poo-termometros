@@ -1,0 +1,76 @@
+# --- CLASE AUXILIAR PARA COMPOSICIÓN ---
+class Bateria:
+    def __init__(self, tipo, capacidad_mah):
+        self.tipo = tipo
+        self.capacidad_mah = capacidad_mah
+        self.__nivel_carga = 100  # Encapsulamiento del nivel de batería
+
+    def get_nivel_carga(self):
+        return self.__nivel_carga
+
+    def gastar_bateria(self, cantidad):
+        if self.__nivel_carga - cantidad >= 0:
+            self.__nivel_carga -= cantidad
+        else:
+            self.__nivel_carga = 0
+
+    def recargar(self):
+        self.__nivel_carga = 100
+        return "Batería recargada al 100%."
+
+    def estado_bateria(self):
+        return f"Batería: {self.tipo} ({self.__nivel_carga}% de carga)"
+
+
+# --- CLASE BASE ---
+class TermometroDigital:
+    def __init__(self, marca, ubicacion, bateria):
+        self.marca = marca
+        self.ubicacion = ubicacion
+        self.bateria = bateria  # <-- COMPOSICIÓN: Un TermometroDigital "tiene-un" objeto Bateria
+        self.__temperatura = 36.5  # Encapsulamiento
+        self.__encendido = False   # Encapsulamiento
+
+    def encender(self):
+        if self.bateria.get_nivel_carga() > 0:
+            self.__encendido = True
+            return f"El termómetro {self.marca} en {self.ubicacion} está ENCENDIDO."
+        else:
+            return f"Error: El termómetro {self.marca} no enciende, la batería está agotada."
+
+    def apagar(self):
+        self.__encendido = False
+        return f"El termómetro {self.marca} se ha apagado."
+
+    def get_encendido(self):
+        return self.__encendido
+
+    def get_temperatura(self):
+        return self.__temperatura
+
+    def tomar_temperatura(self, nueva_temp):
+        if self.__encendido:
+            self.__temperatura = nueva_temp
+            self.bateria.gastar_bateria(5)  # Delegación al objeto compuesto
+            return f"Se midió una nueva temperatura: {self.__temperatura} °C."
+        else:
+            return f"No se puede medir. El termómetro {self.marca} está apagado."
+
+    def mostrar_info(self):
+        estado = "Activo" if self.__encendido else "Inactivo"
+        return f"Termómetro: {self.marca} | Lugar: {self.ubicacion} | Temp: {self.__temperatura} °C | Estado: {estado} | {self.bateria.estado_bateria()}"
+
+
+# --- SUBCLASE PARA HERENCIA Y POLIMORFISMO ---
+class TermometroInfrarrojo(TermometroDigital):
+    def __init__(self, marca, ubicacion, bateria, distancia_maxima_cm):
+        super().__init__(marca, ubicacion, bateria)
+        self.distancia_maxima_cm = distancia_maxima_cm
+
+    # Sobrescribir el método para demostrar POLIMORFISMO
+    def tomar_temperatura(self, nueva_temp):
+        if self.get_encendido():
+            super().tomar_temperatura(nueva_temp)
+            return f"[Modo Infrarrojo - Distancia: {self.distancia_maxima_cm} cm] Lectura a distancia exitosa: {nueva_temp} °C."
+        else:
+            return f"Error: El termómetro infrarrojo {self.marca} está apagado."
